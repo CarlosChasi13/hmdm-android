@@ -40,6 +40,14 @@ import android.graphics.Point;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.app.NotificationManager;
+import android.app.KeyguardManager;
+import android.media.AudioManager;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -212,6 +220,10 @@ public class MainActivity
     private ConfigUpdater configUpdater = new ConfigUpdater();
 
     private Picasso picasso = null;
+
+    private KeyguardManager.KeyguardLock keyguardLock;
+
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -897,7 +909,6 @@ public class MainActivity
         startActivityForResult(intent, 0);
     }
 
-    // Accessibility services are needed in the Pro-version only
     private boolean checkAccessibilityService() {
         return ProUtils.checkAccessibilityService(this);
     }
@@ -910,6 +921,23 @@ public class MainActivity
 
     private void createButtons() {
         ServerConfig config = settingsHelper.getConfig();
+        if (config != null) {
+            if (config != null && config.getKioskMode() != null) {
+                if (config.getKioskMode()) {
+                    Toast.makeText(this, "Modo Kiosko Activado", Toast.LENGTH_LONG).show();
+                    aplicarOpciones(config);
+            
+                } else {
+                    Toast.makeText(this, "Modo Kiosko Desactivado", Toast.LENGTH_LONG).show();
+                    aplicarOpciones(config);
+                }
+            } else {
+                Toast.makeText(this, "Configuración no disponible. Modo Kiosko Desactivado", Toast.LENGTH_LONG).show();
+                aplicarOpciones(config);
+            }    
+        }    
+        
+
         if (ProUtils.kioskModeRequired(this) && !getPackageName().equals(settingsHelper.getConfig().getMainApp())) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                     !Settings.canDrawOverlays( this ) &&
@@ -947,6 +975,131 @@ public class MainActivity
             createLauncherButtons();
         }
     }
+    
+    private void aplicarOpciones(ServerConfig config) {
+        if (config.getKioskMode() != null && config.getKioskMode()) {
+            ocultarUI();  
+            
+            if (config.getMainApp() != null && !config.getMainApp().isEmpty()) {
+                Intent intent = getPackageManager().getLaunchIntentForPackage(config.getMainApp());
+                if (intent != null) {
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(this, "No se pudo iniciar la aplicación principal", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            if (config.getKioskHome() != null && config.getKioskHome()) {
+                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+            } else {
+                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            }
+ 
+            if (config.getKioskRecents() != null && config.getKioskRecents()) {
+                Toast.makeText(this, "Botón de recientes habilitado", Toast.LENGTH_SHORT).show();
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    getWindow().getInsetsController().hide(WindowInsets.Type.systemBars());
+                    getWindow().getInsetsController().setSystemBarsBehavior(
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                } else {
+                    // Para versiones anteriores de Android
+                    getWindow().getDecorView().setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    );
+                }
+                
+            }
+    
+            //NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            
+                // Verificar si se ha otorgado el permiso para la política de notificaciones
+                if (!notificationManager.isNotificationPolicyAccessGranted()) {
+                    // Redirigir al usuario a la configuración para otorgar acceso a la política de notificaciones
+                    Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                    startActivity(intent);
+                } else {
+                    // Si se ha otorgado el permiso, establecer el filtro de interrupciones
+                    if (config.getKioskNotifications() != null && config.getKioskNotifications()) {
+                        notificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL); 
+                    } else {
+                        notificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE); 
+                    }
+                }
+            } else {
+                // Manejar versiones anteriores (menor a API 23)
+                Toast.makeText(this, "Función no soportada en esta versión de Android", Toast.LENGTH_SHORT).show();
+            }
+                       
+    
+            if (config.getKioskSystemInfo() != null && config.getKioskSystemInfo()) {
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);  
+            } else {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);  
+            }
+    
+            KeyguardManager keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            if (config.getKioskKeyguard() != null && config.getKioskKeyguard()) {
+                if (keyguardManager != null && keyguardLock == null) {
+                    keyguardLock = keyguardManager.newKeyguardLock("KioskLock");
+                }
+                keyguardLock.reenableKeyguard();  
+            } else {
+                if (keyguardManager != null && keyguardLock == null) {
+                    keyguardLock = keyguardManager.newKeyguardLock("KioskLock");
+                }
+                keyguardLock.disableKeyguard();  
+            }
+    
+            if (config.getKioskLockButtons() != null && config.getKioskLockButtons()) {
+                // Lógica para bloquear el botón de encendido
+                // (Android no permite bloquear directamente el botón de encendido sin acceso root)
+            } else {
+                // Permitir el funcionamiento normal del botón de encendido
+            }
+            int desiredVolumeLevel = 5;
+            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, desiredVolumeLevel, 0); // Fija el volumen en un nivel específico
+
+    
+        } else {
+            mostrarUI();
+            Toast.makeText(this, "Modo Kiosko Desactivado", Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    // Métodos para ocultar y mostrar la UI
+    private void ocultarUI() {
+        getWindow().getDecorView().setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_IMMERSIVE
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+    
+    private void mostrarUI() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+    }
+
+    @Override
+public boolean onKeyDown(int keyCode, KeyEvent event) {
+    ServerConfig config = settingsHelper.getConfig();
+    
+    // Solo bloquear las teclas de volumen si el modo kiosko está activado
+    if (config != null && config.getKioskMode() != null && config.getKioskMode()) {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            // Bloquear las teclas de volumen en modo kiosko
+            return true; // Bloquea la acción predeterminada de subir/bajar volumen
+        }
+    }
+
+    return super.onKeyDown(keyCode, event); // Permitir otras teclas o si el modo kiosko no está activo
+}
 
     private void startLauncher() {
         createButtons();
