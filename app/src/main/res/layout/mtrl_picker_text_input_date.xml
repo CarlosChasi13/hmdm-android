@@ -1,0 +1,25 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mtrl_calendar_text_input_frame"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/mtrl_calendar_text_input_padding_top"
+    android:paddingBottom="16dp"
+    android:paddingLeft="@dimen/mtrl_calendar_content_padding"
+    android:paddingRight="@dimen/mtrl_calendar_content_padding">
+
+  <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/mtrl_picker_text_input_date"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:minWidth="160dp"  
+      android:maxWidth="@dimen/material_textinput_max_width"
+      android:layout_gravity="center_horizontal">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/mtrl_picker_text_input_date_hint"
+        android:inputType="date"
+        android:imeOptions="flagNoExtractUi"/>
+  </com.google.android.material.textfield.TextInputLayout>
+</FrameLayout>

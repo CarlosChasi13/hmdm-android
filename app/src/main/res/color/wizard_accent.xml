@@ -1,0 +1,3 @@
+<resources>
+    <color name="wizard_accent">@android:color/holo_orange_dark</color>
+</resources>

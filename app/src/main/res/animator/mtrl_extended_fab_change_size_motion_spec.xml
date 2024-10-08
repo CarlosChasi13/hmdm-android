@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Animador para cambiar la altura -->
+    <objectAnimator
+        android:propertyName="height"
+        android:duration="300"
+        android:valueFrom="56"
+        android:valueTo="100"
+        android:valueType="intType" />
+
+    <!-- Animador para cambiar el ancho -->
+    <objectAnimator
+        android:propertyName="width"
+        android:duration="300"
+        android:valueFrom="56"
+        android:valueTo="100"
+        android:valueType="intType" />
+
+</set>

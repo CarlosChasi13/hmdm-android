@@ -1,0 +1,3 @@
+<resources>
+    <color name="color_on_surface_variant">@android:color/holo_green_light</color>
+</resources>

@@ -1,0 +1,3 @@
+<resources>
+    <color name="colorPrimaryDark">@android:color/holo_blue_dark</color>
+</resources>
