@@ -24,4 +24,8 @@
     <dimen name="fab_translation_z_disabled">0dp</dimen>
     <dimen name="m3_bottom_nav_item_padding_bottom">16dp</dimen>
     <dimen name="m3_comp_primary_navigation_tab_with_icon_icon_size">24dp</dimen>
+    <dimen name="abc_search_view_text_min_width">120dp</dimen>
+    <dimen name="select_dialog_drawable_padding_start_material">16dp</dimen>
+    <dimen name="select_dialog_padding_start_material">16dp</dimen>
+
 </resources>

@@ -378,11 +378,11 @@
          // Prevent showing the lock screen during the app download/installation
          getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
  
-         /*binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
          if (binding == null) {
              Log.e("MainActivity", "Binding is null!");
              return;
-         }*/
+         }
          if (binding == null) {
              Log.e("MainActivity", "Binding is null!");
              return;
