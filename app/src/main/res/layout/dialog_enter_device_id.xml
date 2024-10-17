@@ -51,7 +51,7 @@
             android:layout_width="@dimen/dialog_enter_device_id_width"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:textColor="@color/color_accent"
+            android:textColor="@color/colorAccent"
             bind:boolToVisible="@{error}"
             android:text="@string/main_activity_details"
             android:onClick="showErrorDetails"/>

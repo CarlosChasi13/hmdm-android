@@ -45,7 +45,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:text="@string/main_activity_details"
-            android:textColor="@color/color_accent"
+            android:textColor="@color/colorAccent"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:onClick="networkErrorDetailsClicked"
             />
